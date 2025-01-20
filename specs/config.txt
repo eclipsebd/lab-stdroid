@@ -1,0 +1,31 @@
+Raspberry PI W Configuration Information
+----------------------------------------
+
+IP: stdroid.local
+
+Workflow
+--------
+1. modify code
+2. rsync -av --progress ./src/* admin@stdroid.local:/home/admin/stdroid
+3. ssh admin@stdroid.local
+4. cd stdroid
+4. python main.py
+
+
+Libraries to install
+--------------------
+
+
+Assigned GPIOs
+--------------
+INMP441 Microphone (I2S):
+	•	MCLK → GPIO 18
+	•	BCLK → GPIO 19
+	•	LRCLK → GPIO 21
+	•	Data Out → GPIO 20
+
+MAX98357 Audio Amplifier (I2S):
+	•	BCLK → GPIO 19
+	•	LRCLK → GPIO 21
+	•	DIN → GPIO 22
+
