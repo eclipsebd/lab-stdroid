@@ -11,21 +11,10 @@ Workflow
 4. cd stdroid
 4. python main.py
 
-Assigned GPIOs
---------------
-INMP441 Microphone (I2S):
-	•	MCLK → GPIO 18
-	•	BCLK → GPIO 19
-	•	LRCLK → GPIO 21
-	•	Data Out → GPIO 20
-
-MAX98357 Audio Amplifier (I2S):
-	• Setup instructions - https://learn.adafruit.com/adafruit-max98357-i2s-class-d-mono-amp/overview
-	• Vin to 5V Power
-	• GND to Ground
-	• DIN to Raspbery Pi GPIO 21
-	• BCLK to Raspbery Pi GPIO 18
-	• LRCLK to Raspbery Pi GPIO 19
+Install mpg123 to stream test speakers
+	• sudo apt-get install mpg123
 	• Stream Test - mpg123 http://ice1.somafm.com/u80s-128-mp3
 
+References Information
+----------------------
 Raspberry Pi W v1.1 Pinout: https://pinout.xyz/#

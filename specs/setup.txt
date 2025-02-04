@@ -1,0 +1,275 @@
+System Setup and instructions
+-----------------------------
+
+System Overview
+
+Hardware
+	•	Raspberry Pi Zero W (v1.1) (Controls servos, LEDs, and camera)
+	•	Pan/Tilt Servos (Controlled via Raspberry Pi GPIO)
+	•	NeoPixel RGB LEDs (Eyes, controlled via Raspberry Pi GPIO)
+	•	Camera Module (Face tracking)
+	•	Microphone & Speaker (For voice interaction)
+	•	Linux Server (Runs Ollama, Speech-to-Text, Text-to-Speech)
+
+
+Step 1: Supt Raspberry Pi Zero W
+
+1.1 Install Raspberry Pi OS (Raspberry Pi OS lite - no GUI)
+
+1.2 Install Dependencies
+
+SSH into your Raspberry Pi and update packages:
+    sudo apt update && sudo apt upgrade -y
+
+Install required Python libraries:
+    sudo apt install python3 python3-pip python3-venv git ffmpeg -y
+    pip3 install adafruit-circuitpython-neopixel adafruit-circuitpython-servokit opencv-python mediapipe numpy sounddevice vosk
+
+Enable I2C, SPI, and Camera via:
+    sudo raspi-config 
+    Interfaces -> Enable I2c, SPI, and Camera
+
+Reboot:
+    sudo Reboot
+
+
+Step 2: Connect and Control NeoPixels (Eyes)
+
+Wiring
+	•	NeoPixel Data Pin → Raspberry Pi GPIO18
+	•	Power (5V) → Raspberry Pi 5V
+	•	Ground (GND) → Raspberry Pi GND
+
+Python Code for NeoPixels:
+----
+import board
+import neopixel
+import time
+import random
+from textblob import TextBlob  # Sentiment analysis
+
+# Initialize NeoPixels
+pixels = neopixel.NeoPixel(board.D18, 3)  # Three eyes
+
+def set_eye_color(color):
+    pixels.fill(color)
+
+def indicate_thinking():
+    set_eye_color((255, 165, 0))  # Orange (Processing)
+
+def indicate_speaking():
+    set_eye_color((0, 0, 255))  # Blue (Speaking)
+
+def indicate_error():
+    for _ in range(5):  # Flashing red for error
+        set_eye_color((255, 0, 0))
+        time.sleep(0.2)
+        set_eye_color((0, 0, 0))
+        time.sleep(0.2)
+
+def set_eye_by_sentiment(text):
+    analysis = TextBlob(text).sentiment.polarity  # Sentiment score from -1 to 1
+
+    if analysis > 0.3:
+        set_eye_color((0, 255, 0))  # Green (Happy)
+    elif analysis < -0.3:
+        set_eye_color((255, 0, 0))  # Red (Angry/Negative)
+    elif -0.3 <= analysis <= -0.1:
+        set_eye_color((128, 0, 128))  # Purple (Sad)
+    else:
+        set_eye_color((255, 255, 255))  # White (Neutral)
+
+set_eye_color((255, 255, 255))  # Default: White glow
+----
+
+
+Step 3: Control Pan/Tilt Servos
+
+Wiring
+
+Use an Adafruit PCA9685 servo controller:
+	•	VCC → 3.3V
+	•	GND → GND
+	•	SDA → SDA (GPIO2)
+	•	SCL → SCL (GPIO3)
+	•	Servo PWM connections → Pan/Tilt servos
+
+Python Code for Servo Control
+----
+from adafruit_servokit import ServoKit
+
+kit = ServoKit(channels=16)
+
+def move_head(pan_angle, tilt_angle):
+    kit.servo[0].angle = pan_angle  # Adjust to your servo channel
+    kit.servo[1].angle = tilt_angle
+
+# Example
+move_head(90, 90)  # Centered
+----
+
+
+Step 4: Implement Face Tracking
+----
+import cv2
+import mediapipe as mp
+
+mp_face_detection = mp.solutions.face_detection
+face_detection = mp_face_detection.FaceDetection(min_detection_confidence=0.6)
+
+cap = cv2.VideoCapture(0)
+
+while cap.isOpened():
+    ret, frame = cap.read()
+    if not ret:
+        break
+
+    h, w, _ = frame.shape
+    rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    results = face_detection.process(rgb_frame)
+
+    if results.detections:
+        for detection in results.detections:
+            bboxC = detection.location_data.relative_bounding_box
+            x, y, box_w, box_h = int(bboxC.xmin * w), int(bboxC.ymin * h), int(bboxC.width * w), int(bboxC.height * h)
+
+            # Move head based on face position
+            pan_angle = (x + box_w / 2) / w * 180
+            tilt_angle = (y + box_h / 2) / h * 180
+            move_head(pan_angle, tilt_angle)
+
+cap.release()
+----
+
+
+Step 5: Set Up the Backend Server
+
+5.1 Install Ollama on Your Linux Server
+    curl -fsSL https://ollama.ai/install.sh | sh
+
+5.2 Install Required Packages
+    sudo apt install python3 python3-pip ffmpeg -y
+    pip3 install flask vosk gtts sounddevice
+
+5.3 Install a Local Speech-to-Text Model
+    git clone https://github.com/alphacep/vosk-api.git
+    cd vosk-api/python/example
+    wget https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip
+    unzip vosk-model-small-en-us-0.15.zip
+    mv vosk-model-small-en-us-0.15 model
+
+
+Step 6: Build the API Server
+
+Create a file server.py:
+----
+from flask import Flask, request, jsonify
+import ollama
+import sounddevice as sd
+import wave
+from vosk import Model, KaldiRecognizer
+from gtts import gTTS
+import os
+
+app = Flask(__name__)
+
+model = Model("model")  # Load Vosk model
+
+@app.route("/query", methods=["POST"])
+def query():
+    data = request.json
+    text = data.get("text", "")
+
+    response = ollama.chat(model="mistral", messages=[{"role": "user", "content": text}])
+    reply = response['message']['content']
+
+    # Convert text to speech
+    tts = gTTS(reply, lang="en")
+    tts.save("response.mp3")
+    os.system("mpg321 response.mp3")
+
+    return jsonify({"response": reply})
+
+@app.route("/stt", methods=["POST"])
+def stt():
+    duration = 5  # 5-second recording
+    fs = 16000
+    recording = sd.rec(int(duration * fs), samplerate=fs, channels=1, dtype='int16')
+    sd.wait()
+
+    wf = wave.open("record.wav", "wb")
+    wf.setnchannels(1)
+    wf.setsampwidth(2)
+    wf.setframerate(fs)
+    wf.writeframes(recording.tobytes())
+    wf.close()
+
+    rec = KaldiRecognizer(model, fs)
+    with wave.open("record.wav", "rb") as f:
+        rec.AcceptWaveform(f.readframes(f.getnframes()))
+
+    return jsonify({"text": rec.Result()})
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
+----
+
+Run:
+    python3 server.py
+
+
+Step 7: Connect Raspberry Pi to Backend
+
+Modify the Raspberry Pi code to send speech to text and get responses:
+----
+import requests
+
+SERVER_IP = "http://server-ip:5000"
+
+def query_llm(text):
+    indicate_thinking()  # Set to orange while waiting
+    response = requests.post(f"{SERVER_IP}/query", json={"text": text})
+    
+    if response.status_code == 200:
+        reply = response.json()["response"]
+        set_eye_by_sentiment(reply)  # Set color based on sentiment
+        indicate_speaking()  # Turn blue while speaking
+        return reply
+    else:
+        indicate_error()  # Flash red for error
+        return "Error processing request."
+
+def speech_to_text():
+    response = requests.post(f"{SERVER_IP}/stt")
+    
+    if response.status_code == 200:
+        return response.json()["text"]
+    else:
+        indicate_error()
+        return ""
+----
+
+Notes:
+
+Sentiment based eye color reference
+
+State	            Color
+-----------------   -----------------------
+Default (Idle)	    White (255, 255, 255)
+Processing	        Orange (255, 165, 0)
+Speaking	        Blue (0, 0, 255)
+Error	            Flashing Red (255, 0, 0)
+Happy/Positive	    Green (0, 255, 0)
+Neutral	            White (255, 255, 255)
+Angry/Negative	    Red (255, 0, 0)
+Sad/Disappointed	Purple (128, 0, 128)
+
+
+Sentiment Analysis
+
+TextBlob is a Python library used for natural language processing (NLP). It provides simple APIs for common NLP tasks, 
+including sentiment analysis. The sentiment analysis function evaluates the emotional tone of a piece of text, typically 
+on a scale from -1 to 1:
+	•	1: Highly positive sentiment
+	•	0: Neutral sentiment
+	•	-1: Highly negative sentiment
