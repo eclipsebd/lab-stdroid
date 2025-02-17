@@ -1,0 +1,5 @@
+Setup the Raspberry Pi
+----------------------
+
+sudo apt update
+sudo apt upgrade

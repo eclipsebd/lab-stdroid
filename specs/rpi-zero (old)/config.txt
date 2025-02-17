@@ -11,3 +11,10 @@ Workflow
 4. cd stdroid
 4. python main.py
 
+Install mpg123 to stream test speakers
+	• sudo apt-get install mpg123
+	• Stream Test (from https://somafm.com/) - mpg123 http://ice1.somafm.com/u80s-128-mp3
+
+References Information
+----------------------
+Raspberry Pi W v1.1 Pinout: https://pinout.xyz/#
