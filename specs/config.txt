@@ -13,7 +13,7 @@ Workflow
 
 Install mpg123 to stream test speakers
 	• sudo apt-get install mpg123
-	• Stream Test - mpg123 http://ice1.somafm.com/u80s-128-mp3
+	• Stream Test (from https://somafm.com/) - mpg123 http://ice1.somafm.com/u80s-128-mp3
 
 References Information
 ----------------------

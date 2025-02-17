@@ -21,13 +21,22 @@ Step 1: Supt Raspberry Pi Zero W
 SSH into your Raspberry Pi and update packages:
     sudo apt update && sudo apt upgrade -y
 
-Install required Python libraries:
+Create & Activate Virtual Environment
+
+    python3 -m venv ~/droid-env
+    source ~/droid-env/bin/activate
+
     sudo apt install python3 python3-pip python3-venv git ffmpeg -y
-    pip3 install adafruit-circuitpython-neopixel adafruit-circuitpython-servokit opencv-python mediapipe numpy sounddevice vosk
+
+Install required Python libraries:
+    pip install --upgrade pip
+    pip3 install adafruit-circuitpython-neopixel adafruit-circuitpython-servokit numpy opencv-python sounddevice
 
 Enable I2C, SPI, and Camera via:
     sudo raspi-config 
-    Interfaces -> Enable I2c, SPI, and Camera
+    	•	Interfaces → Enable I2C
+	    •	Interfaces → Enable SPI
+	    •	Interfaces → Enable Camera
 
 Reboot:
     sudo Reboot
@@ -106,39 +115,6 @@ def move_head(pan_angle, tilt_angle):
 
 # Example
 move_head(90, 90)  # Centered
-----
-
-
-Step 4: Implement Face Tracking
-----
-import cv2
-import mediapipe as mp
-
-mp_face_detection = mp.solutions.face_detection
-face_detection = mp_face_detection.FaceDetection(min_detection_confidence=0.6)
-
-cap = cv2.VideoCapture(0)
-
-while cap.isOpened():
-    ret, frame = cap.read()
-    if not ret:
-        break
-
-    h, w, _ = frame.shape
-    rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-    results = face_detection.process(rgb_frame)
-
-    if results.detections:
-        for detection in results.detections:
-            bboxC = detection.location_data.relative_bounding_box
-            x, y, box_w, box_h = int(bboxC.xmin * w), int(bboxC.ymin * h), int(bboxC.width * w), int(bboxC.height * h)
-
-            # Move head based on face position
-            pan_angle = (x + box_w / 2) / w * 180
-            tilt_angle = (y + box_h / 2) / h * 180
-            move_head(pan_angle, tilt_angle)
-
-cap.release()
 ----
 
 
@@ -273,3 +249,75 @@ on a scale from -1 to 1:
 	•	1: Highly positive sentiment
 	•	0: Neutral sentiment
 	•	-1: Highly negative sentiment
+
+
+Important
+---------
+
+Mediapipe does not work on the RPiZ so we need to use the following code from openCV for face detection:
+----
+import cv2
+from adafruit_servokit import ServoKit
+
+# Initialize PCA9685 for servo control (assuming channels 0 and 1 for pan/tilt)
+kit = ServoKit(channels=16)
+
+# Load Haar cascade model
+face_cascade = cv2.CascadeClassifier('models/haarcascade_frontalface_default.xml')
+
+# Initialize camera
+cap = cv2.VideoCapture(0)
+
+# Center position for servos
+pan_angle = 90
+tilt_angle = 90
+kit.servo[0].angle = pan_angle  # Pan
+kit.servo[1].angle = tilt_angle  # Tilt
+
+while True:
+    ret, frame = cap.read()
+    if not ret:
+        continue
+
+    # Convert to grayscale (Haar cascades work better with grayscale)
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    
+    # Detect faces
+    faces = face_cascade.detectMultiScale(gray, 1.1, 4)
+    
+    for (x, y, w, h) in faces:
+        face_center_x = x + w // 2
+        face_center_y = y + h // 2
+
+        # Adjust servo angles based on face position
+        if face_center_x < 140:
+            pan_angle += 2  # Move left
+        elif face_center_x > 180:
+            pan_angle -= 2  # Move right
+        
+        if face_center_y < 100:
+            tilt_angle += 2  # Move up
+        elif face_center_y > 140:
+            tilt_angle -= 2  # Move down
+
+        # Limit angles to avoid breaking servos
+        pan_angle = max(60, min(120, pan_angle))
+        tilt_angle = max(60, min(120, tilt_angle))
+
+        # Move servos
+        kit.servo[0].angle = pan_angle
+        kit.servo[1].angle = tilt_angle
+        
+        # Draw rectangle around face
+        cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
+
+    # Display the frame (useful for debugging with a monitor)
+    cv2.imshow('Face Tracking', frame)
+
+    # Exit with 'q' key
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+cap.release()
+cv2.destroyAllWindows()
+----
