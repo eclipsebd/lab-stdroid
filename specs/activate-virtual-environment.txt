@@ -1,25 +1,31 @@
+Create Virtual Environment
+--------------------------
+python3 -m venv --system-site-packages droid-dev
+
+
 Activate Virtual Environment
 ----------------------------
-
 Every time you restart your Raspberry Pi, reactivate the virtual environment before running scripts:
 
-    source ~/droid-env/bin/activate
+    source ~/droid-dev/bin/activate
 
 To exit the environment, simply run:
 
     deactivate
 
-Should see the prompt: (droid-env) admin@stdroid:~ $
+Should see the prompt: (droid-dev) admin@stdroid:~ $
 
 
+Addition Notes
+--------------
 To make the virtual environment active when logging in, modify the shell:
     nano ~/.bashrc
 
 Past this at the bottom:
-    # Auto-activate droid-env virtual environment
-    source ~/droid-env/bin/activate
+    # Auto-activate droid-dev virtual environment
+    source ~/droid-dev/bin/activate
 
 Then run to reinitialize the shell:
     source ~/.bashrc
 
-Should see the prompt: (droid-env) admin@stdroid:~ $
+Should see the prompt: (droid-dev) admin@stdroid:~ $

@@ -3,6 +3,8 @@ Setup the Raspberry Pi
 sudo apt update
 sudo apt upgrade
 
+sudo apt install -y python3-pip
+
 
 Setup Camera (arducam ov5640)
 -----------------------------
@@ -25,8 +27,10 @@ sudo apt install -y ffmpeg
 Install picamera2
 -----------------
 sudo apt install -y python3-picamera2 --no-install-recommends
+sudo apt install libcap-dev
 
 Install opencv
 --------------
 sudo apt install -y python3-opencv
 sudo apt install -y opencv-data
+sudo apt install cmake
