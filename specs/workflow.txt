@@ -1,0 +1,7 @@
+Workflow
+--------
+1. modify code
+2. rsync -av --progress ./src/* admin@stdroid.local:/home/admin/stdroid
+3. ssh admin@stdroid.local
+4. cd stdroid
+4. python main.py

@@ -1,0 +1,4 @@
+Install gpio and pca9685
+------------------------
+pip3 install RPi.GPIO Adafruit-PCA9685
+

@@ -2,3 +2,6 @@ PiCamera2
 ---------
 https://datasheets.raspberrypi.com/camera/picamera2-manual.pdf
 
+PCA9685 Servo Controler
+-----------------------
+https://www.kevsrobots.com/learn/pca9685/

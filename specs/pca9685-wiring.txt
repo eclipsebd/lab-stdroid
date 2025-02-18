@@ -1,0 +1,11 @@
+PCA9685 Pinout
+--------------
+VCC -> raspberry pi 5v
+GND -> raspberry pi GND
+OE -> raspberry pi GND
+SCL -> raspberry pi SCL (GPIO 3)
+SDA -> raspberry pi SDA (GPIO 2)
+
+Power connections:
+5-6v -> external power supply
+GND -> shared with raspberry pi GND
