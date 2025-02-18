@@ -1,5 +1,32 @@
 Setup the Raspberry Pi
 ----------------------
-
 sudo apt update
 sudo apt upgrade
+
+
+Setup Camera (arducam ov5640)
+-----------------------------
+sudo nano /boot/firmware/config.txt 
+
+#Find the line: camera_auto_detect=1, update it to:
+camera_auto_detect=0
+
+#Find the line: [all], add the following item under it:
+dtoverlay=ov5647
+
+#Save and reboot
+sudo reboot
+
+Install Camera Tools
+--------------------
+sudo apt install libcamera-apps
+sudo apt install -y ffmpeg
+
+Install picamera2
+-----------------
+sudo apt install -y python3-picamera2 --no-install-recommends
+
+Install opencv
+--------------
+sudo apt install -y python3-opencv
+sudo apt install -y opencv-data

@@ -3,6 +3,10 @@ Raspberry PI W Configuration Information
 
 IP: stdroid.local
 
+ssh admin@stdroid.local
+(password: Welcome!23)
+
+
 Workflow
 --------
 1. modify code
