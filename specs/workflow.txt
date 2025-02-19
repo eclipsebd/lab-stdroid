@@ -1,8 +1,8 @@
 Workflow
 --------
 1. modify code
-2. rsync -av --progress ./src/* admin@stdroid.local:/home/admin/stdroid-app
-3. rsync -av --progress ./examples/* admin@stdroid.local:/home/admin/stdroid-examples
+2. rsync -av --progress ./src/app/* admin@stdroid.local:/home/admin/stdroid-app
+3. rsync -av --progress ./src/examples/* admin@stdroid.local:/home/admin/stdroid-examples
 
 4. ssh admin@stdroid.local (password: Welcome!23)
 5. cd stdroid-app
