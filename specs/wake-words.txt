@@ -2,5 +2,12 @@ Wake Words
 ----------
 
 DR-O1D
-Kalani
-ST-Droid
+Kalani - free version of picovoice only allows one model
+ST-Droid - free version of picovoice only allows one model
+
+picovoice access key: eF4m18n9iKIYhXuF0neQE6R1dnsu/BTpkkKdg5Q0hpgxD/FSok4qbQ==
+
+Notes
+-----
+- since picovoice is commercial and the free version is limited, we will be 
+  using vosk and ALSA for wake word detection
