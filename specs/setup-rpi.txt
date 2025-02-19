@@ -37,6 +37,10 @@ Install picamera2
 sudo apt install -y python3-picamera2 --no-install-recommends
 sudo apt install libcap-dev
 
+Install espeak
+--------------
+sudo apt install espeak
+
 Install Python pip
 ------------------
 sudo apt install python3-pip
