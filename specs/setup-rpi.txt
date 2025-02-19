@@ -5,6 +5,14 @@ sudo apt upgrade
 
 sudo apt install -y python3-pip
 
+Enable I2C for pca9685:
+    sudo raspi-config
+    
+    Navigate to Interfacing Options
+    Select I2C
+    Answer the question "Would you like the ARM I2C interface to be enabled?" with Yes
+
+    sudo reboot
 
 Setup Camera (arducam ov5640)
 -----------------------------
