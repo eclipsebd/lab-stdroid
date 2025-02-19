@@ -1,2 +1,0 @@
-pip install imutils
-pip install face-recognition
